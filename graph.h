@@ -142,6 +142,23 @@ struct Graph {
 
         return dist;
     }
+
+    // validate if the shortest path tree (distance profile) is valid.
+    // Once this is broken, it might indicate the existence of a negative cycle.
+    bool validate_shortest_path_tree(vector<T> &dist, bool ignore_negative_edges=false) {
+        for(auto e : edges) {
+            if(ignore_negative_edges && get_weight(e) < T(0)) {
+                continue;
+            }
+
+            if(dist[e.s] != numeric_limits<T>::max() && dist[e.e] > dist[e.s] + get_weight(e)) {
+                cerr << "dist[" << e.s << "] = " << dist[e.s] << " -> dist[" << e.e << "] = " << dist[e.e] 
+                << ", but there is an edge with weight " << get_weight(e) << "violating the shortest path tree\n";
+                return false;
+            }
+        }
+        return true;
+    }
 };
 
 #endif

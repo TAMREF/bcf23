@@ -16,4 +16,9 @@ int main() {
 
     for(int i : v) cout << i << ' ';
     cout << '\n';
+
+    cout << "validation 1: " << G.validate_shortest_path_tree(v) << '\n';
+
+    G.phi = vector<int>({1, 2, 3, 2}); // arbitrarily re-assign potentials
+    cout << "validation 2: " << G.validate_shortest_path_tree(v) << '\n';
 }
