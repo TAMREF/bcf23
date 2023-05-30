@@ -1,0 +1,1 @@
+g++-9 -O2 -DTAMREF -std=c++17 main.cpp
