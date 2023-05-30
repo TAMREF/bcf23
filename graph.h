@@ -38,6 +38,10 @@ struct Graph {
         return edges.size();
     }
 
+    inline vector<T> initial_dist() {
+        return vector<T>(N(), numeric_limits<T>::max());
+    }
+
     T get_weight(const Edge<T> &e) {
         return e.w + phi[e.s] - phi[e.e];
     }
@@ -58,7 +62,7 @@ struct Graph {
             assert(get_min_edge_weight() >= T(0));
         }
 
-        vector<T> dist(N(), numeric_limits<T>::max());
+        vector<T> dist = initial_dist();
 
         using PairT = pair<T, size_t>;
         priority_queue<PairT, vector<PairT>, greater<PairT>> Q;
@@ -93,8 +97,50 @@ struct Graph {
     // Complexity: O(dijkstra * kappa)
     // kappa: guaranteed number of loops.
     vector<T> lazy_dijkstra(size_t src, size_t kappa) {
-        assert(false); // TBD
-        return vector<T>(N());
+        using PairT = pair<T, size_t>;
+        priority_queue<PairT, vector<PairT>, greater<PairT>> Q;
+
+        vector<T> dist = initial_dist();
+
+        Q.emplace(dist[src] = T(0), src);
+        for(size_t counter = 0; counter < kappa && !Q.empty(); counter++) {
+
+            while(!Q.empty()) {
+                auto [current_dist, current_vertex] = Q.top();
+                Q.pop();
+
+                if(current_dist != dist[current_vertex]) continue;
+                
+                for(auto edge_idx : adj[current_vertex]) {
+                    auto edge = edges[edge_idx];
+                    
+                    if(get_weight(edge) < T(0)) continue; // ignore negative edges
+                    
+                    size_t next_vertex = edge.e;
+                    
+                    if(dist[next_vertex] > dist[current_vertex] + get_weight(edge)) {
+                        Q.emplace(
+                            dist[next_vertex] = dist[current_vertex] + get_weight(edge),
+                            next_vertex
+                        );
+                    }
+                }
+            }
+
+            for(auto e : edges) {
+                if(get_weight(e) < T(0) && dist[e.s] != numeric_limits<T>::max()) { 
+                    // negative edge & e.s is reached out
+                    if(dist[e.e] > dist[e.s] + get_weight(e)) {
+                        Q.emplace(
+                            dist[e.e] = dist[e.s] + get_weight(e),
+                            e.e
+                        );
+                    }
+                }
+            }
+        }
+
+        return dist;
     }
 };
 

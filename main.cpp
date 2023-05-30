@@ -12,7 +12,7 @@ int main() {
     G.add_edge(Edge<int>({1, 2, 1}));
     G.add_edge(Edge<int>({2, 3, -1}));
 
-    vector<int> v = G.dijkstra(0, true);
+    vector<int> v = G.lazy_dijkstra(0, 2);
 
     for(int i : v) cout << i << ' ';
     cout << '\n';
