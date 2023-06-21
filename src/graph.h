@@ -4,13 +4,14 @@
 #include <queue>
 using namespace std;
 
-// Directional Edge
+// Directional Edge with weight.
 template <typename T>
 struct Edge {
     size_t s, e; // s -> e
     T w;
 };
 
+// Graph struct with edge weights and vertex potential.
 template <typename T>
 struct Graph {
     vector<T> phi; // vertex-wide potential
