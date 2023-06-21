@@ -6,9 +6,11 @@
 using namespace std;
 
 int main() {
-    int n = 4;
+    int n = 3;
     
-    Graph<int> G(4);
+    Graph<int> G(3);
+    
+    G.add_vertex();
 
     G.add_edge(Edge<int>({0, 1, 2}));
     G.add_edge(Edge<int>({1, 2, 1}));

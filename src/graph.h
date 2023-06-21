@@ -20,6 +20,10 @@ struct Graph {
 
     Graph(size_t n) : phi(n), adj(n) {}
 
+    void add_vertex(T phi_value=0) {
+        phi.emplace_back(phi_value);
+    }
+
     void add_edge(const Edge<T> e) {
         assert(0 <= e.s && e.s < N()); // zero-based
         assert(0 <= e.e && e.e < N());
