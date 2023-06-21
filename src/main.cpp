@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include "graph.h"
+#include "sputils.h"
 
 using namespace std;
 
@@ -13,13 +14,13 @@ int main() {
     G.add_edge(Edge<int>({1, 2, 1}));
     G.add_edge(Edge<int>({2, 3, -1}));
 
-    vector<int> v = G.lazy_dijkstra(0, 2);
+    vector<int> v = lazy_dijkstra(G, 0, 2);
 
     for(int i : v) cout << i << ' ';
     cout << '\n';
 
-    cout << "validation 1: " << G.validate_shortest_path_tree(v) << '\n';
+    cout << "validation 1: " << validate_shortest_path_tree(G, v) << '\n';
 
     G.phi = vector<int>({1, 2, 3, 2}); // arbitrarily re-assign potentials
-    cout << "validation 2: " << G.validate_shortest_path_tree(v) << '\n';
+    cout << "validation 2: " << validate_shortest_path_tree(G, v) << '\n';
 }
