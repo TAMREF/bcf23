@@ -2,6 +2,7 @@
 // includes dijkstra, bellman_ford and lazy_dijkstra (BCF23 original)
 #include "graph.hpp"
 #include "sputils.hpp"
+#include "capper.hpp"
 #include <numeric>
 #include <vector>
 
@@ -15,16 +16,23 @@ namespace internal {
     void relax_dijkstra_with_priority_queue(
         Graph<T> &g,
         priority_queue<PairT, vector<PairT>, greater<PairT>> &Q,
-        vector<T> &dist
+        vector<T> &dist,
+        OperationCapper *capper = nullptr
     ) {
+        if(capper == nullptr) capper = new NoCapOperationCapper();
+
         while(!Q.empty()) {
             auto [current_dist, current_vertex] = Q.top();
             Q.pop();
+            // capper fail
+            if(!capper->incr()) return;
 
             if(current_dist != dist[current_vertex]) continue;
             
             for(auto edge_idx : g.adj[current_vertex]) {
                 auto edge = g.edges[edge_idx];
+                
+                if(!capper->incr()) return;
                 
                 if(g.get_weight(edge) < T(0)) continue; // ignore negative edges
                 
@@ -139,8 +147,13 @@ namespace lazy_dijkstra {
         Graph<T> &g,
         vector<size_t> src,
         size_t kappa,
-        bool validate
+        bool validate,
+        OperationCapper *capper = nullptr
     ) {
+        if(capper == nullptr) {
+            capper = new NoCapOperationCapper();
+        }
+
         priority_queue<PairT, vector<PairT>, greater<PairT>> Q;
 
         vector<T> dist = g.initial_dist();
@@ -152,10 +165,14 @@ namespace lazy_dijkstra {
         for(size_t counter = 0; counter < kappa && !Q.empty(); counter++) {
 
             // dijkstra stage.
-            internal::relax_dijkstra_with_priority_queue(g, Q, dist);
+            internal::relax_dijkstra_with_priority_queue(g, Q, dist, capper);
+            if(capper->fail()) return dist;
 
             // bellman-ford with negative edges.
             for(auto e : g.edges) {
+                // capper fail
+                if(!capper->incr()) return dist;
+
                 if(g.get_weight(e) < T(0) && dist[e.s] != numeric_limits<T>::max()) { 
                     // negative edge & e.s is reached out
                     if(dist[e.e] > dist[e.s] + g.get_weight(e)) {
@@ -183,9 +200,10 @@ namespace lazy_dijkstra {
         Graph<T> &g,
         size_t src,
         size_t kappa,
-        bool validate
+        bool validate,
+        OperationCapper *capper = nullptr
     ) {
-        return multi_source(g, vector<size_t>({src}), kappa, validate);
+        return multi_source(g, vector<size_t>({src}), kappa, validate, capper);
     }
 
     // lazy dijkstra with all vertices as source. This is from BCF23.
@@ -195,10 +213,11 @@ namespace lazy_dijkstra {
     vector<T> all_source(
         Graph<T> &g,
         size_t kappa,
-        bool validate
+        bool validate,
+        const OperationCapper *capper = nullptr
     ) {
         vector<size_t> src(g.N());
         iota(src.begin(), src.end(), 0);
-        return multi_source(g, src, kappa, validate);
+        return multi_source(g, src, kappa, validate, capper);
     }
 } // lazy_dijkstra

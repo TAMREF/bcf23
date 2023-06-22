@@ -2,14 +2,27 @@
 // Here we replace wall clock with operation count.
 #pragma once
 #include <cstdlib>
+#include <iostream>
+
+using namespace std;
 
 struct OperationCapper {
     virtual bool incr(size_t amount = 1) = 0;
+
+    bool fail() {
+        return !incr(0);
+    }
+
+    virtual ~OperationCapper() {}
 };
 
 struct NoCapOperationCapper : OperationCapper {
     bool incr(size_t amount = 1) override {
         return true;
+    }
+
+    ~NoCapOperationCapper() {
+        cerr << "safely deconstructing nocap operator\n";
     }
 };
 
