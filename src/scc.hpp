@@ -65,12 +65,12 @@ struct SCCDecomposition {
         function<void(size_t)> dfs = [&](size_t x) {
             dt[x] = ++clk;
             for(auto edge_idx : g.adj[x]) {
+                if(g.deleted_edge(edge_idx)) continue;
                 assert(x == g.edges[edge_idx].s);
                 auto y = g.edges[edge_idx].e;
 
-                if(!dt[y]) {
-                    dfs(y);
-                }
+                if(g.deleted_vertex(y) || dt[y]) continue;
+                dfs(y);
             }
 
             ft.push_back(x);
@@ -82,26 +82,32 @@ struct SCCDecomposition {
             scc_subgraphs[last_scc_idx].add_vertex(T(0)); // override with zero potential
 
             for(auto edge_idx : g.radj[x]) {
+                if(g.deleted_edge(edge_idx)) continue;
+                
                 auto y = g.edges[edge_idx].s;
+
+                if(g.deleted_vertex(y)) continue;
+                
                 if(vertex_down_map[y] != INVALID_SCC_INDEX) continue;
                 assign_scc(y);
             }
         };
 
         for(int i = 0; i < n; i++) {
-            if(!dt[i]) dfs(i);
+            if(g.deleted_vertex(i) || dt[i]) continue;
+            dfs(i);
         }
 
         reverse(ft.begin(), ft.end());
 
         for(int i : ft) {
-            if(vertex_down_map[i] == INVALID_SCC_INDEX) {
-                // assign new scc subgraph and inverse mapping
-                scc_subgraphs.emplace_back(0, true);
-                vertex_up_map.emplace_back();
-                assign_scc(i);
-                ++last_scc_idx;
-            }
+            if(g.deleted_vertex(i) || vertex_down_map[i] != INVALID_SCC_INDEX) continue;
+            
+            // assign new scc subgraph and inverse mapping
+            scc_subgraphs.emplace_back(0, true);
+            vertex_up_map.emplace_back();
+            assign_scc(i);
+            ++last_scc_idx;
         }
 
         for(auto edge : g.edges) {

@@ -24,26 +24,31 @@ namespace internal {
         while(!Q.empty()) {
             auto [current_dist, current_vertex] = Q.top();
             Q.pop();
-            // capper fail
-            if(!capper->incr()) return;
 
             if(current_dist != dist[current_vertex]) continue;
             
             for(auto edge_idx : g.adj[current_vertex]) {
+                if(g.deleted_edge(edge_idx)) continue;
+
+                // skipped since edge is deleted
                 auto edge = g.edges[edge_idx];
                 
-                if(!capper->incr()) return;
-                
-                if(g.get_weight(edge) < T(0)) continue; // ignore negative edges
+                // ignore negative edges
+                if(g.get_weight(edge) < T(0)) continue;
                 
                 size_t next_vertex = edge.e;
+
+                // skipped since next vertex is deleted
+                if(g.deleted_vertex(next_vertex)) continue;
                 
-                if(dist[next_vertex] > dist[current_vertex] + g.get_weight(edge)) {
-                    Q.emplace(
-                        dist[next_vertex] = dist[current_vertex] + g.get_weight(edge),
-                        next_vertex
-                    );
-                }
+                // skipped due to useless relzaxation
+                if(dist[next_vertex] <= dist[current_vertex] + g.get_weight(edge)) continue;
+                
+                // relax
+                Q.emplace(
+                    dist[next_vertex] = dist[current_vertex] + g.get_weight(edge),
+                    next_vertex
+                );
             }
         }
     }
@@ -58,19 +63,26 @@ namespace naive_dijkstra {
     vector<T> multi_source(
         Graph<T> &g,
         vector<size_t> src, 
-        bool ignore_negative_edges
+        bool ignore_negative_edges,
+        OperationCapper *capper = nullptr
     ) {
         if(!ignore_negative_edges) {
             assert(g.get_min_edge_weight() >= T(0));
         }
 
+        if(capper == nullptr) {
+            capper = new NoCapOperationCapper();
+        }
+
         vector<T> dist = g.initial_dist();
         priority_queue<PairT, vector<PairT>, greater<PairT>> Q;
         for(auto s : src) {
+            if(g.deleted_vertex(s)) continue;
             Q.emplace(dist[s] = T(0), s);
         }
 
-        internal::relax_dijkstra_with_priority_queue(g, Q, dist);
+        if(!capper->incr()) return dist;
+        internal::relax_dijkstra_with_priority_queue(g, Q, dist, capper);
 
         return dist;
     }
@@ -83,9 +95,10 @@ namespace naive_dijkstra {
     vector<T> single_source(
         Graph<T> &g,
         size_t src, 
-        bool ignore_negative_edges
+        bool ignore_negative_edges,
+        OperationCapper *capper = nullptr
     ) {
-        return multi_source(g, vector<size_t>({src}), ignore_negative_edges);
+        return multi_source(g, vector<size_t>({src}), ignore_negative_edges, capper);
     }
 } // naive_dijkstra
 
@@ -163,7 +176,6 @@ namespace lazy_dijkstra {
         }
 
         for(size_t counter = 0; counter < kappa && !Q.empty(); counter++) {
-
             // dijkstra stage.
             internal::relax_dijkstra_with_priority_queue(g, Q, dist, capper);
             if(capper->fail()) return dist;
@@ -171,7 +183,6 @@ namespace lazy_dijkstra {
             // bellman-ford with negative edges.
             for(auto e : g.edges) {
                 // capper fail
-                if(!capper->incr()) return dist;
 
                 if(g.get_weight(e) < T(0) && dist[e.s] != numeric_limits<T>::max()) { 
                     // negative edge & e.s is reached out

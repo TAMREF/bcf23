@@ -23,12 +23,18 @@ struct Graph {
     vector<vector<size_t>> adj, radj; // adjacency list
     bool is_scc; // original graph, or SCC?
 
-    Graph(size_t n, bool is_scc = false) : phi(n), adj(n), radj(n), is_scc(is_scc) {}
+    vector<bool> delv, dele; // deleted vertices, edges;
+    bool use_dels;
+
+    Graph(size_t n, bool is_scc = false) : phi(n), adj(n), radj(n), is_scc(is_scc), use_dels(false) {}
 
     void add_vertex(T phi_value=0) {
         phi.emplace_back(phi_value);
         adj.emplace_back();
         radj.emplace_back();
+        if(use_dels) {
+            delv.emplace_back();
+        }
     }
 
     void add_edge(const Edge<T> e) {
@@ -40,6 +46,9 @@ struct Graph {
 
         adj[e.s].push_back(edge_idx);
         radj[e.e].push_back(edge_idx);
+        if(use_dels) {
+            dele.emplace_back();
+        }
     }
 
     inline size_t N() {
@@ -78,5 +87,25 @@ struct Graph {
         }
 
         return gt;
+    }
+
+    void enable_dels() {
+        use_dels = true;
+        delv.resize(N());
+        dele.resize(M());
+    }
+
+    bool deleted_vertex(size_t v) {
+        return use_dels && delv[v];
+    }
+
+    bool deleted_edge(size_t edge_idx) {
+        return use_dels && dele[edge_idx];
+    }
+
+    void disable_dels() {
+        use_dels = false;
+        delv.clear();
+        dele.clear();
     }
 };
