@@ -33,7 +33,6 @@ struct Graph {
         auto edge_idx =  M() -1;
 
         adj[e.s].push_back(edge_idx);
-        adj[e.e].push_back(edge_idx);
     }
 
     inline size_t N() {
@@ -42,6 +41,10 @@ struct Graph {
 
     inline size_t M() {
         return edges.size();
+    }
+
+    inline size_t deg(size_t x) {
+        return adj[x].size();
     }
 
     inline vector<T> initial_dist() {

@@ -1,6 +1,6 @@
-#include "sputils.h"
-#include "spalgo.h"
-#include "graph.h"
+#include "sputils.hpp"
+#include "spalgo.hpp"
+#include "graph.hpp"
 #include "catch2/catch_all.hpp"
 
 TEST_CASE("compare bellman ford and lazy dijkstra", "[validate]") {

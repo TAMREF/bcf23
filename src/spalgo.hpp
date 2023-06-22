@@ -1,7 +1,7 @@
 // Shortest Path algorithms.
 // includes dijkstra, bellman_ford and lazy_dijkstra (BCF23 original)
-#include "graph.h"
-#include "sputils.h"
+#include "graph.hpp"
+#include "sputils.hpp"
 #include <vector>
 
 using namespace std;

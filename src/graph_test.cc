@@ -1,6 +1,6 @@
 #include "catch2/catch_all.hpp"
 #include <vector>
-#include "graph.h"
+#include "graph.hpp"
 
 TEST_CASE("graph_basic_tests", "[graph]") {
     Graph<int> g(size_t(3));
@@ -19,6 +19,10 @@ TEST_CASE("graph_basic_tests", "[graph]") {
         g.add_edge(Edge<int>({0, 1, 2}));
         g.add_edge(Edge<int>({1, 2, 1}));
         g.add_edge(Edge<int>({2, 3, -1}));
+
+        REQUIRE(g.deg(0) == 1);
+        REQUIRE(g.deg(1) == 1);
+        REQUIRE(g.deg(2) == 1);
 
         REQUIRE(g.M() == 3);
         REQUIRE(g.get_min_edge_weight() == -1);

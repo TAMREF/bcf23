@@ -9,12 +9,13 @@ add_executable(bcf23
 )
 
 find_package(Catch2 3 REQUIRED)
-# These tests can use the Catch2-provided main
-add_executable(tests 
-    src/spalgo_test.cc
-    src/graph_test.cc
-    src/sputils_test.cc
-)
+
+# Collect all test source files
+file(GLOB TEST_SOURCES "src/*_test.cc")
+
+# Create the executable target
+add_executable(tests ${TEST_SOURCES})
+
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 
 # These tests need their own main
