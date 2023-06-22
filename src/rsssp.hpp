@@ -1,2 +1,3 @@
+// Restricted SSSP.
 #pragma once
 

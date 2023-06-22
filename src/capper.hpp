@@ -1,0 +1,25 @@
+// BCF23 depends on various 'terminate if does not work on time budget'.
+// Here we replace wall clock with operation count.
+#pragma once
+#include <cstdlib>
+
+struct OperationCapper {
+    virtual bool incr(size_t amount = 1) = 0;
+};
+
+struct NoCapOperationCapper : OperationCapper {
+    bool incr(size_t amount = 1) override {
+        return true;
+    }
+};
+
+struct NormalOperationCapper : OperationCapper {
+    size_t counter, budget;
+    NormalOperationCapper(size_t budget) : budget(budget), counter(0) {}
+
+    bool incr(size_t amount = 1) override {
+        bool ret = counter <= budget; // last mercy
+        counter += amount;
+        return ret;
+    }
+};
