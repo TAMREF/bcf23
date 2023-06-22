@@ -1,4 +1,5 @@
 #include "sputils.h"
+#include "spalgo.h"
 #include "graph.h"
 #include "catch2/catch_all.hpp"
 

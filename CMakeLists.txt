@@ -11,6 +11,7 @@ add_executable(bcf23
 find_package(Catch2 3 REQUIRED)
 # These tests can use the Catch2-provided main
 add_executable(tests 
+    src/spalgo_test.cc
     src/graph_test.cc
     src/sputils_test.cc
 )
