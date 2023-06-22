@@ -79,7 +79,7 @@ namespace naive_dijkstra {
     ) {
         return multi_source(g, vector<size_t>({src}), ignore_negative_edges);
     }
-}
+} // naive_dijkstra
 
 
 namespace bellman_ford {
@@ -128,7 +128,7 @@ namespace bellman_ford {
         iota(src.begin(), src.end(), 0);
         return multi_source(g, src);
     }
-}
+} // bellman_ford
 
 namespace lazy_dijkstra {
     // lazy dijkstra with multiple sources. This is from BCF23.
@@ -201,4 +201,4 @@ namespace lazy_dijkstra {
         iota(src.begin(), src.end(), 0);
         return multi_source(g, src, kappa, validate);
     }
-}
+} // lazy_dijkstra
