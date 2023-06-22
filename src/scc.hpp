@@ -61,16 +61,12 @@ struct SCCDecomposition {
         vector<size_t> ft;
         size_t clk = 0;
 
-        // temporary inverse-adjacency list. only stores vertex
-        vector<vector<size_t>> radj(n);
-
         // forward step dfs
         function<void(size_t)> dfs = [&](size_t x) {
             dt[x] = ++clk;
             for(auto edge_idx : g.adj[x]) {
                 assert(x == g.edges[edge_idx].s);
                 auto y = g.edges[edge_idx].e;
-                radj[y].emplace_back(x);
 
                 if(!dt[y]) {
                     dfs(y);
@@ -85,7 +81,8 @@ struct SCCDecomposition {
             vertex_down_map[x] = _add_scc_vertex(x, last_scc_idx);
             scc_subgraphs[last_scc_idx].add_vertex(T(0)); // override with zero potential
 
-            for(auto y : radj[x]) {
+            for(auto edge_idx : g.radj[x]) {
+                auto y = g.edges[edge_idx].s;
                 if(vertex_down_map[y] != INVALID_SCC_INDEX) continue;
                 assign_scc(y);
             }

@@ -16,14 +16,15 @@ template <typename T>
 struct Graph {
     vector<T> phi; // vertex-wide potential
     vector<Edge<T>> edges; // edges
-    vector<vector<size_t>> adj; // adjacency list
+    vector<vector<size_t>> adj, radj; // adjacency list
     bool is_scc; // original graph, or SCC?
 
-    Graph(size_t n, bool is_scc = false) : phi(n), adj(n), is_scc(is_scc) {}
+    Graph(size_t n, bool is_scc = false) : phi(n), adj(n), radj(n), is_scc(is_scc) {}
 
     void add_vertex(T phi_value=0) {
         phi.emplace_back(phi_value);
         adj.emplace_back();
+        radj.emplace_back();
     }
 
     void add_edge(const Edge<T> e) {
@@ -34,6 +35,7 @@ struct Graph {
         auto edge_idx =  M() -1;
 
         adj[e.s].push_back(edge_idx);
+        radj[e.e].push_back(edge_idx);
     }
 
     inline size_t N() {

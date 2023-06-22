@@ -35,6 +35,14 @@ struct Witness {
     }
 };
 
+template <typename T>
+Witness<T> make_witness_for_sptree(const vector<T> &dist) {
+    Witness<T> wt;
+    wt.state = SHORTEST_PATH_TREE_FOUND;
+    wt.shortest_path_tree_witness = dist;
+    return wt;
+}
+
 
 // Shortest Path with result and witness per SCC.
 template <typename T>
