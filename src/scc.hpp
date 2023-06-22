@@ -18,9 +18,12 @@ struct SCCDecomposition {
     // subgraphs for each SCC.
     vector<Graph<T>> scc_subgraphs;
     // subgraph vertex index -> original vertex index
-    vector<vector<size_t>> subgraph_to_original;
+    vector<vector<size_t>> vertex_up_map;
+    vector<vector<size_t>> edge_up_map;
+
     // original vertex index -> (subgraph index, subgraph vertex index)
-    vector<SCCIndex> original_to_subgraph; // size: n
+    vector<SCCIndex> vertex_down_map; // size: n
+    vector<size_t> edge_down_map; // size: m
 
     SCCDecomposition(Graph<T> &_g) : g(_g), inter_scc(_g.N()) {
         _decompose();
@@ -32,15 +35,25 @@ struct SCCDecomposition {
 
     // utility function to add a vertex into given scc group.
     SCCIndex _add_scc_vertex(size_t v, size_t scc_idx) {
-        subgraph_to_original[scc_idx].emplace_back(v);
-        return SCCIndex(scc_idx, subgraph_to_original[scc_idx].size() - 1);
+        vertex_up_map[scc_idx].emplace_back(v);
+        return SCCIndex(scc_idx, vertex_up_map[scc_idx].size() - 1);
+    }
+
+    bool in_same_scc(size_t v1, size_t v2) {
+        return vertex_down_map[v1].first == vertex_down_map[v2].first;
+    }
+
+    SCCIndex get_edge_index(size_t edge_idx) {
+        auto edge = g.edges[edge_idx];
+        if( in_same_scc(edge.s, edge.e) ) return SCCIndex(vertex_down_map[edge.s].first, edge_down_map[edge_idx]);
+        else return SCCIndex(INVALID_SCC_INDEX.first, edge_down_map[edge_idx]);
     }
 
     void _decompose() {
         auto n = g.N();
 
         // Initialize scc-related variables
-        original_to_subgraph.resize(n, INVALID_SCC_INDEX);
+        vertex_down_map.resize(n, INVALID_SCC_INDEX);
         size_t last_scc_idx = 0;
 
         // Kosaraju's algorithm for SCC
@@ -69,11 +82,11 @@ struct SCCDecomposition {
 
         // backward step dfs
         function<void(size_t)> assign_scc = [&](size_t x) {
-            original_to_subgraph[x] = _add_scc_vertex(x, last_scc_idx);
+            vertex_down_map[x] = _add_scc_vertex(x, last_scc_idx);
             scc_subgraphs[last_scc_idx].add_vertex(T(0)); // override with zero potential
 
             for(auto y : radj[x]) {
-                if(original_to_subgraph[y] != INVALID_SCC_INDEX) continue;
+                if(vertex_down_map[y] != INVALID_SCC_INDEX) continue;
                 assign_scc(y);
             }
         };
@@ -85,10 +98,10 @@ struct SCCDecomposition {
         reverse(ft.begin(), ft.end());
 
         for(int i : ft) {
-            if(original_to_subgraph[i] == INVALID_SCC_INDEX) {
+            if(vertex_down_map[i] == INVALID_SCC_INDEX) {
                 // assign new scc subgraph and inverse mapping
                 scc_subgraphs.emplace_back(0);
-                subgraph_to_original.emplace_back();
+                vertex_up_map.emplace_back();
                 assign_scc(i);
                 ++last_scc_idx;
             }
@@ -96,17 +109,22 @@ struct SCCDecomposition {
 
         for(auto edge : g.edges) {
             // compare subgraph index
-            if(original_to_subgraph[edge.s].first == original_to_subgraph[edge.e].first) {
+            if(vertex_down_map[edge.s].first == vertex_down_map[edge.e].first) {
                 // projected edge
-                scc_subgraphs[original_to_subgraph[edge.s].first].add_edge(
+                auto scc_idx = vertex_down_map[edge.s].first;
+
+                scc_subgraphs[scc_idx].add_edge(
                     {
-                        original_to_subgraph[edge.s].second,
-                        original_to_subgraph[edge.e].second,
+                        vertex_down_map[edge.s].second,
+                        vertex_down_map[edge.e].second,
                         edge.w
                     }
                 );
+
+                edge_down_map.emplace_back(scc_subgraphs[scc_idx].M() - 1);
             } else {
                 inter_scc.add_edge(edge);
+                edge_down_map.emplace_back(inter_scc.M() - 1);
             }
         }
     }

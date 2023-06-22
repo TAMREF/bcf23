@@ -30,3 +30,27 @@ bool validate_shortest_path_tree(
     }
     return true;
 }
+
+// validate_negative_cycle validates if negative cycle is truly negative.
+template <typename T>
+bool validate_negative_cycle(
+    Graph<T> &g,
+    vector<size_t> &negative_cycle
+) {
+    if(negative_cycle.empty()) {
+        return false;
+    }
+
+    T weight = 0;
+    size_t previous_end = g.edges[negative_cycle.back()].e;
+    for(auto edge_idx : negative_cycle) {
+        auto edge = g.edges[edge_idx];
+
+        assert(previous_end == edge.s);
+        previous_end = edge.e;
+
+        weight += edge.w;
+    }
+
+    return weight < 0;
+}

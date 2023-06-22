@@ -42,7 +42,7 @@ TEST_CASE("scc for test", "[scc]") {
         {0, 0},
     });
 
-    REQUIRE( expected_scc_indices == S.original_to_subgraph );
+    REQUIRE( expected_scc_indices == S.vertex_down_map );
 
     auto expected_scc_to_original = vector<vector<size_t>>({
         {6},
@@ -50,7 +50,7 @@ TEST_CASE("scc for test", "[scc]") {
         {3, 4, 5}
     });
 
-    REQUIRE(expected_scc_to_original == S.subgraph_to_original);
+    REQUIRE(expected_scc_to_original == S.vertex_up_map);
 
     REQUIRE(S.scc_subgraphs[0].N() == 1);
     REQUIRE(S.scc_subgraphs[0].M() == 0);
@@ -60,4 +60,8 @@ TEST_CASE("scc for test", "[scc]") {
 
     REQUIRE(S.scc_subgraphs[2].N() == 3);
     REQUIRE(S.scc_subgraphs[2].M() == 3);
+
+    // validate get_edge_index
+    REQUIRE(S.get_edge_index(0) == SCCIndex(1, 0));
+    REQUIRE(S.get_edge_index(8) == SCCIndex(-1, 2));
 }

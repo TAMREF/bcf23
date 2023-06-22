@@ -21,3 +21,18 @@ TEST_CASE("validate_shortest_path_tree", "[validate]") {
         REQUIRE_FALSE( validate_shortest_path_tree(G, v) );
     }
 }
+
+TEST_CASE("validate_negative_cycle", "[validate]") {
+    Graph<int> G(3);
+
+    G.add_edge(Edge<int>({0, 1, 2}));
+    G.add_edge(Edge<int>({2, 0, -1}));
+    G.add_edge(Edge<int>({1, 2, -3}));
+
+    vector<size_t> neg_cycle({0, 2, 1});
+
+    REQUIRE( validate_negative_cycle(G, neg_cycle) );
+
+    G.edges[2].w = 3;
+    REQUIRE_FALSE( validate_negative_cycle(G, neg_cycle) );
+}
