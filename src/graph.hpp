@@ -17,8 +17,9 @@ struct Graph {
     vector<T> phi; // vertex-wide potential
     vector<Edge<T>> edges; // edges
     vector<vector<size_t>> adj; // adjacency list
+    bool is_scc; // original graph, or SCC?
 
-    Graph(size_t n) : phi(n), adj(n) {}
+    Graph(size_t n, bool is_scc = false) : phi(n), adj(n), is_scc(is_scc) {}
 
     void add_vertex(T phi_value=0) {
         phi.emplace_back(phi_value);

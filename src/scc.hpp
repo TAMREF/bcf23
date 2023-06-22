@@ -100,7 +100,7 @@ struct SCCDecomposition {
         for(int i : ft) {
             if(vertex_down_map[i] == INVALID_SCC_INDEX) {
                 // assign new scc subgraph and inverse mapping
-                scc_subgraphs.emplace_back(0);
+                scc_subgraphs.emplace_back(0, true);
                 vertex_up_map.emplace_back();
                 assign_scc(i);
                 ++last_scc_idx;

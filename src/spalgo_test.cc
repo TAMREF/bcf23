@@ -23,7 +23,7 @@ TEST_CASE("compare bellman ford and lazy dijkstra", "[validate]") {
 
     // insufficient loop
     vector<int> y = lazy_dijkstra(G, 3, 1);
-    SECTION("result should not agre") {
+    SECTION("result should not agree") {
         REQUIRE(y != w);
     }
 }
