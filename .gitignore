@@ -34,3 +34,9 @@
 
 main
 main.dSYM
+
+gtest/
+Catch2/
+catch2/
+
+build/

@@ -1,7 +1,10 @@
 #pragma once
 
 #include <vector>
+#include <iostream>
 #include "graph.h"
+
+using namespace std;
 
 // validate_shortest_path_tree validates
 // if the shortest path tree (distance map) is valid.

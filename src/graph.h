@@ -22,6 +22,7 @@ struct Graph {
 
     void add_vertex(T phi_value=0) {
         phi.emplace_back(phi_value);
+        adj.emplace_back();
     }
 
     void add_edge(const Edge<T> e) {
