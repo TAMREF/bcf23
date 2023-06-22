@@ -10,8 +10,8 @@ TEST_CASE("compare bellman ford and lazy dijkstra", "[validate]") {
     G.add_edge(Edge<int>({2, 1, -1}));
     G.add_edge(Edge<int>({3, 2, -1}));
 
-    vector<int> v = lazy_dijkstra(G, 3, 3);
-    vector<int> w = bellman_ford(G, 3);
+    vector<int> v = lazy_dijkstra::single_source(G, 3, 3, false);
+    vector<int> w = bellman_ford::single_source(G, 3);
 
     SECTION("lazy dijkstra should succeed") {
         REQUIRE( validate_shortest_path_tree(G, v) );
@@ -22,7 +22,7 @@ TEST_CASE("compare bellman ford and lazy dijkstra", "[validate]") {
     }
 
     // insufficient loop
-    vector<int> y = lazy_dijkstra(G, 3, 1);
+    vector<int> y = lazy_dijkstra::single_source(G, 3, 1, false);
     SECTION("result should not agree") {
         REQUIRE(y != w);
     }

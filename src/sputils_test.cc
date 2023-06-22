@@ -10,7 +10,7 @@ TEST_CASE("validate_shortest_path_tree", "[validate]") {
     G.add_edge(Edge<int>({1, 2, 1}));
     G.add_edge(Edge<int>({2, 3, -1}));
 
-    vector<int> v = lazy_dijkstra(G, 0, 2);
+    vector<int> v = lazy_dijkstra::single_source(G, 0, 2, false);
 
     SECTION("dijkstra should succeed") {
         REQUIRE( validate_shortest_path_tree(G, v) );

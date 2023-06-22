@@ -3,6 +3,7 @@
 #include "scc.hpp"
 #include "sputils.hpp"
 
+// Shortest Path Algorithm Result State.
 enum ShortestPathState {
     UNKNOWN,
     SHORTEST_PATH_TREE_FOUND,
