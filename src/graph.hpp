@@ -9,6 +9,10 @@ template <typename T>
 struct Edge {
     size_t s, e; // s -> e
     T w;
+
+    bool operator== (const Edge<T> &other) const {
+        return s == other.s && e == other.e && w == other.w;
+    }
 };
 
 // Graph struct with edge weights and vertex potential.
@@ -63,5 +67,16 @@ struct Graph {
             return get_weight(e) < get_weight(f);
         });
         return get_weight(*it);
+    }
+
+    Graph<T> transpose() {
+        Graph<T> gt(*this);
+        gt.adj.swap(gt.radj);
+
+        for(auto &e : gt.edges) {
+            swap(e.s, e.e);
+        }
+
+        return gt;
     }
 };
