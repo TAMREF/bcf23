@@ -44,13 +44,47 @@ Witness<T> _solve_rsssp(
     auto out_light_vertices = internal::get_in_light_vertices(gt, kappa, cfg);
     if(cfg.capper.fail()) return Witness<T>();
 
-    g.enable_dels();
-    for(auto v : out_light_vertices) {
-        if(g.delv[v]) continue;
+    // initialize geometric sampler for radius
+    geometric_distribution<T> radius_sampler(RADIUS_TEMPERATURE * log(g.N()) / kappa);
 
-        
+    g.enable_dels();
+    gt.enable_dels();
+    for(auto v : out_light_vertices) {
+        if(g.deleted_vertex(v)) continue;
+
+        T r = radius_sampler(cfg.rng);
+        auto [ball, boundary] = naive_dijkstra::get_ball_and_boundary(g, v, r, &cfg.capper);
+
+        for(auto v : ball) {
+            g.delete_vertex(v);
+            gt.delete_vertex(v);
+        }
+
+        for(auto e : boundary) {
+            g.delete_edge(e);
+            gt.delete_edge(e);
+        }
     }
+
+    for(auto v : in_light_verties) {
+        if(g.deleted_vertex(v)) continue;
+
+        T r = radius_sampler(cfg.rng);
+        auto [ball, boundary] = naive_dijkstra::get_ball_and_boundary(gt, v, r, &cfg.capper);
+
+        for(auto v : ball) {
+            g.delete_vertex(v);
+            gt.delete_vertex(v);
+        }
+
+        for(auto e : boundary) {
+            g.delete_edge(e);
+            gt.delete_edge(e);
+        }
+    }
+
     g.disable_dels();
+    gt.disable_dels();
 }
 
 namespace internal {
@@ -79,6 +113,8 @@ namespace internal {
 
         vector<size_t> ret;
         for(size_t i = 0; i < n; i++) {
+            // estimate real ball size with ball_counter * n / k.
+            // ball_counter * n / k <= LIGHT_RATIO * n
             if(ball_counter[i] <= LIGHT_RATIO * k) ret.emplace_back(i);
         }
 

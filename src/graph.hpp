@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <queue>
+#include <unordered_set>
 using namespace std;
 
 // Directional Edge with weight.
@@ -23,7 +24,7 @@ struct Graph {
     vector<vector<size_t>> adj, radj; // adjacency list
     bool is_scc; // original graph, or SCC?
 
-    vector<bool> delv, dele; // deleted vertices, edges;
+    unordered_set<size_t> delv, dele; // deleted vertices, edges;
     bool use_dels;
 
     Graph(size_t n, bool is_scc = false) : phi(n), adj(n), radj(n), is_scc(is_scc), use_dels(false) {}
@@ -32,9 +33,6 @@ struct Graph {
         phi.emplace_back(phi_value);
         adj.emplace_back();
         radj.emplace_back();
-        if(use_dels) {
-            delv.emplace_back();
-        }
     }
 
     void add_edge(const Edge<T> e) {
@@ -46,9 +44,6 @@ struct Graph {
 
         adj[e.s].push_back(edge_idx);
         radj[e.e].push_back(edge_idx);
-        if(use_dels) {
-            dele.emplace_back();
-        }
     }
 
     inline size_t N() {
@@ -91,16 +86,24 @@ struct Graph {
 
     void enable_dels() {
         use_dels = true;
-        delv.resize(N());
-        dele.resize(M());
     }
 
     bool deleted_vertex(size_t v) {
-        return use_dels && delv[v];
+        return use_dels && delv.count(v);
+    }
+
+    void delete_vertex(size_t v) {
+        assert(use_dels);
+        delv.insert(v);
     }
 
     bool deleted_edge(size_t edge_idx) {
-        return use_dels && dele[edge_idx];
+        return use_dels && dele.count(edge_idx);
+    }
+
+    void delete_edge(size_t edge_idx) {
+        assert(use_dels);
+        dele.insert(edge_idx);
     }
 
     void disable_dels() {

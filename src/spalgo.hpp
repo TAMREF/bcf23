@@ -100,6 +100,81 @@ namespace naive_dijkstra {
     ) {
         return multi_source(g, vector<size_t>({src}), ignore_negative_edges, capper);
     }
+
+    template <typename T, typename PairT = pair<T, size_t>>
+    pair<
+    vector<size_t>,
+    vector<size_t>
+    > get_ball_and_boundary(
+        Graph<T> &g,
+        size_t src,
+        T r,
+        OperationCapper *capper = nullptr
+    ) {
+        if(capper == nullptr) {
+            capper = new NoCapOperationCapper();
+        }
+
+        vector<size_t> ball_vertices;
+        vector<size_t> boundary_edge_candidates;
+
+        // capper failure
+        if(!capper->incr()) return pair(ball_vertices, boundary_edge_candidates);
+
+        auto dist = g.initial_dist();
+
+
+        priority_queue<PairT, vector<PairT>, greater<PairT>> Q;
+        Q.emplace(
+            dist[src] = 0,
+            src
+        );
+
+        while(!Q.empty()) {
+            auto [current_dist, current_vertex] = Q.top();
+            Q.pop();
+
+            if(current_dist != dist[current_vertex]) continue;
+            if(current_dist > r) continue;
+            ball_vertices.emplace_back(current_vertex);
+            
+            for(auto edge_idx : g.adj[current_vertex]) {
+                if(g.deleted_edge(edge_idx)) continue;
+
+                // skipped since edge is deleted
+                auto edge = g.edges[edge_idx];
+                
+                // ignore negative edges
+                if(g.get_weight(edge) < T(0)) continue;
+                
+                size_t next_vertex = edge.e;
+
+                // skipped since next vertex is deleted
+                if(g.deleted_vertex(next_vertex)) continue;
+                
+                if(dist[next_vertex] > dist[current_vertex] + g.get_weight(edge)) {
+                    // relax
+                    Q.emplace(
+                        dist[next_vertex] = dist[current_vertex] + g.get_weight(edge),
+                        next_vertex
+                    );
+                }
+
+                // add boundary candidates
+                if(dist[next_vertex] > r) {
+                    boundary_edge_candidates.emplace_back(edge_idx);
+                }
+            }
+        }
+
+        vector<size_t> boundary_edges;
+        for(auto edge_idx : boundary_edge_candidates) {
+            auto edge = g.edges[edge_idx];
+            if(dist[edge.s] <= r || dist[edge.e] > r) boundary_edges.emplace_back(edge_idx);
+        }
+
+        return pair(ball_vertices, boundary_edges);
+    }
 } // naive_dijkstra
 
 
