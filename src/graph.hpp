@@ -111,4 +111,9 @@ struct Graph {
         delv.clear();
         dele.clear();
     }
+
+    bool is_restricted() {
+        // do not verify minimum cycle mean.
+        return get_min_edge_weight() >= -1;
+    }
 };

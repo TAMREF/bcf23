@@ -1,5 +1,6 @@
 // Shortest Path algorithms.
 // includes dijkstra, bellman_ford and lazy_dijkstra (BCF23 original)
+#pragma once
 #include "graph.hpp"
 #include "sputils.hpp"
 #include "capper.hpp"
@@ -101,6 +102,7 @@ namespace naive_dijkstra {
         return multi_source(g, vector<size_t>({src}), ignore_negative_edges, capper);
     }
 
+    // Naive dijkstra algorithm on non-negative edges.
     template <typename T, typename PairT = pair<T, size_t>>
     pair<
     vector<size_t>,
@@ -300,7 +302,7 @@ namespace lazy_dijkstra {
         Graph<T> &g,
         size_t kappa,
         bool validate,
-        const OperationCapper *capper = nullptr
+        OperationCapper *capper = nullptr
     ) {
         vector<size_t> src(g.N());
         iota(src.begin(), src.end(), 0);

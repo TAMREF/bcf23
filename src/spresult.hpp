@@ -24,7 +24,7 @@ struct Witness {
     NegativeCycleWitness negative_cycle_witness;
 
     bool validate(Graph<T> &g) {
-        switch ShortestPathState {
+        switch (state) {
             case UNKNOWN:
             return false;
             case SHORTEST_PATH_TREE_FOUND:
@@ -42,24 +42,3 @@ Witness<T> make_witness_for_sptree(const vector<T> &dist) {
     wt.shortest_path_tree_witness = dist;
     return wt;
 }
-
-
-// Shortest Path with result and witness per SCC.
-template <typename T>
-struct ShortestPathResult : SCCDecomposition<T> {
-    vector<Witness<T>> witness_per_scc;
-
-    ShortestPathResult(Graph<T> &g) : SCCDecomposition<T>(g) {
-        witness_per_scc.resize(num_scc());
-    }
-
-    bool validate_per_scc() {
-        size_t n = num_scc();
-        
-        for(size_t i = 0; i < n; i++) {
-            if(!witness_per_scc[i].validate(scc_subgraphs[i])) return false;
-        }
-
-        return true;
-    }
-};

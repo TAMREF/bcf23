@@ -110,7 +110,10 @@ struct SCCDecomposition {
             ++last_scc_idx;
         }
 
-        for(auto edge : g.edges) {
+        for(size_t edge_idx = 0, m = g.M(); edge_idx < m; edge_idx++) {
+            if(g.deleted_edge(edge_idx)) continue;
+            auto edge = g.edges[edge_idx];
+            if(g.deleted_vertex(edge.s) || g.deleted_vertex(edge.e)) continue;
             // compare subgraph index
             if(vertex_down_map[edge.s].first == vertex_down_map[edge.e].first) {
                 // projected edge
