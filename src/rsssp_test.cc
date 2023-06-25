@@ -24,3 +24,20 @@ TEST_CASE("minimal example of restricted graph", "[rsssp]") {
         1, 1, 0
     }));
 }
+
+TEST_CASE("should fail on negative cycle", "[rsssp]") {
+    Graph<int> g(3);
+
+    g.add_edge({0, 1, 0});
+    g.add_edge({1, 2, 0});
+    g.add_edge({2, 0, -1});
+
+    g.is_scc = true;
+
+    SSSPConfig cfg = NewCappedConfig(200);
+    Witness<int> w = solve_rsssp(g, cfg);
+
+    REQUIRE_FALSE( w.validate(g) );
+    REQUIRE( w.state == UNKNOWN );
+    REQUIRE( cfg.capper -> fail() );
+}
