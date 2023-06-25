@@ -48,6 +48,27 @@ void one_step_scaling(
 
     assert(wit.state == SHORTEST_PATH_TREE_FOUND);
     for(size_t i = 0; i < g.N(); i++) {
-        g.phi[i] += W * (wit.shortest_path_tree_witness[i] + h.phi[i]);
+        g.phi[i] += W * (wit.shortest_path_tree_witness.pure_dist[i]);
     }
+}
+
+// sssp solves single source shortest path problem.
+template <typename T>
+Witness<T> sssp(
+    Graph<T> &g,
+    size_t src,
+    SSSPConfig &cfg
+) {
+    // initial multiplication
+    size_t n = g.N();
+    Graph<T> h = g;
+
+    T weight_mult = 4 * n;
+    for(auto &phi : h.phi) {
+        phi *= weight_mult;
+    }
+    for(auto &e : h.edges) {
+        e.w *= weight_mult;
+    }
+    // scale before sssp
 }

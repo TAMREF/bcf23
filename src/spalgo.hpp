@@ -2,7 +2,7 @@
 // includes dijkstra, bellman_ford and lazy_dijkstra (BCF23 original)
 #pragma once
 #include "graph.hpp"
-#include "sputils.hpp"
+#include "spresult.hpp"
 #include "capper.hpp"
 #include <numeric>
 #include <vector>
@@ -17,16 +17,18 @@ namespace internal {
     void relax_dijkstra_with_priority_queue(
         Graph<T> &g,
         priority_queue<PairT, vector<PairT>, greater<PairT>> &Q,
-        vector<T> &dist,
+        ShortestPathTreeWitnessV2<T> &wit,
         OperationCapper *capper = nullptr
     ) {
         if(capper == nullptr) capper = new NoCapOperationCapper();
+
+        if(!capper -> incr()) return;
 
         while(!Q.empty()) {
             auto [current_dist, current_vertex] = Q.top();
             Q.pop();
 
-            if(current_dist != dist[current_vertex]) continue;
+            if(current_dist != wit.dist[current_vertex]) continue;
             
             for(auto edge_idx : g.adj[current_vertex]) {
                 if(g.deleted_edge(edge_idx)) continue;
@@ -43,11 +45,17 @@ namespace internal {
                 if(g.deleted_vertex(next_vertex)) continue;
                 
                 // skipped due to useless relzaxation
-                if(dist[next_vertex] <= dist[current_vertex] + g.get_weight(edge)) continue;
+                if(
+                    wit.dist[next_vertex] 
+                    <= wit.dist[current_vertex] + g.get_weight(edge)
+                ) continue;
                 
                 // relax
+                wit.dist[next_vertex] = wit.dist[current_vertex] + g.get_weight(edge);
+                wit.parent_edge_idx[next_vertex] = edge_idx;
+
                 Q.emplace(
-                    dist[next_vertex] = dist[current_vertex] + g.get_weight(edge),
+                    wit.dist[next_vertex],
                     next_vertex
                 );
             }
@@ -61,7 +69,7 @@ namespace naive_dijkstra {
     // otherwise, ignore negative edges and proceed dijkstra's algorithm only with non-negative edges.
     // @return The distance vector from src.
     template <typename T, typename PairT = pair<T, size_t>>
-    vector<T> multi_source(
+    ShortestPathTreeWitnessV2<T> multi_source(
         Graph<T> &g,
         vector<size_t> src, 
         bool ignore_negative_edges,
@@ -75,17 +83,19 @@ namespace naive_dijkstra {
             capper = new NoCapOperationCapper();
         }
 
-        vector<T> dist = g.initial_dist();
+        ShortestPathTreeWitnessV2<T> wit(g.N());
+        wit.dist = g.initial_dist();
+
         priority_queue<PairT, vector<PairT>, greater<PairT>> Q;
         for(auto s : src) {
             if(g.deleted_vertex(s)) continue;
-            Q.emplace(dist[s] = T(0), s);
+            Q.emplace(wit.dist[s] = T(0), s);
         }
 
-        if(!capper->incr()) return dist;
-        internal::relax_dijkstra_with_priority_queue(g, Q, dist, capper);
+        internal::relax_dijkstra_with_priority_queue(g, Q, wit, capper);
+        // skip capper validation here.
 
-        return dist;
+        return wit;
     }
 
     // Naive dijkstra with single source.
@@ -93,7 +103,7 @@ namespace naive_dijkstra {
     // otherwise, ignore negative edges and proceed dijkstra's algorithm only with non-negative edges.
     // @return The distance vector from src.
     template <typename T>
-    vector<T> single_source(
+    ShortestPathTreeWitnessV2<T> single_source(
         Graph<T> &g,
         size_t src, 
         bool ignore_negative_edges,
@@ -183,33 +193,37 @@ namespace naive_dijkstra {
 namespace bellman_ford {
     // Bellman-ford algorithm with multiple sources.
     template <typename T>
-    vector<T> multi_source(
+    ShortestPathTreeWitnessV2<T> multi_source(
         Graph<T> &g,
         vector<size_t> src
     ) {
-        vector<T> dist = g.initial_dist();
+        ShortestPathTreeWitnessV2<T> wit(g.N());
+        wit.dist = g.initial_dist();
+
         for(auto s : src) {
-            dist[s] = T(0);
+            wit.dist[s] = T(0);
         }
 
         auto n = g.N();
         for(int i = 0; i < n - 1; i++) {
+            size_t edge_idx = 0;
             for(auto e : g.edges) {
-                if(dist[e.s] != numeric_limits<T>::max()) { 
+                if(wit.dist[e.s] != numeric_limits<T>::max()) { 
                     // negative edge & e.s is reached out
-                    dist[e.e] = min(
-                        dist[e.e],
-                        dist[e.s] + g.get_weight(e)
-                    );
+                    if(wit.dist[e.e] > wit.dist[e.s] + g.get_weight(e)) {
+                        wit.dist[e.e] = wit.dist[e.s] + g.get_weight(e);
+                        wit.parent_edge_idx[e.e] = edge_idx;
+                    }
                 }
+                ++edge_idx;
             }
         }
-        return dist;
+        return wit;
     }
 
     // bellman-ford algorithm with a single source.
     template <typename T>
-    vector<T> single_source(
+    ShortestPathTreeWitnessV2<T> single_source(
         Graph<T> &g,
         size_t src
     ) {
@@ -219,7 +233,7 @@ namespace bellman_ford {
     // bellman-ford algorithm with all vertices as source.
     // distance map will be non-positive in this case.
     template <typename T>
-    vector<T> all_source(
+    ShortestPathTreeWitnessV2<T> all_source(
         Graph<T> &g
     ) {
         vector<size_t> src(g.N());
@@ -230,9 +244,9 @@ namespace bellman_ford {
 
 namespace lazy_dijkstra {
     template <typename T, typename PairT = pair<T, size_t>>
-    vector<T> pre_dist(
+    ShortestPathTreeWitnessV2<T> predetermined_initial_wit(
         Graph<T> &g,
-        vector<T> dist,
+        ShortestPathTreeWitnessV2<T> wit,
         size_t kappa,
         bool validate,
         OperationCapper *capper = nullptr
@@ -243,42 +257,44 @@ namespace lazy_dijkstra {
         priority_queue<PairT, vector<PairT>, greater<PairT>> Q;
 
         for(size_t i = 0; i < g.N(); i++) {
-            Q.emplace(dist[i], i);
+            Q.emplace(wit.dist[i], i);
         }
 
         for(size_t counter = 0; counter < kappa && !Q.empty(); counter++) {
             // dijkstra stage.
-            internal::relax_dijkstra_with_priority_queue(g, Q, dist, capper);
-            if(capper->fail()) return dist;
+            internal::relax_dijkstra_with_priority_queue(g, Q, wit, capper);
+            if(capper->fail()) return wit;
 
             // bellman-ford with negative edges.
+            auto edge_idx = 0;
             for(auto e : g.edges) {
-                // capper fail
-
-                if(g.get_weight(e) < T(0) && dist[e.s] != numeric_limits<T>::max()) { 
+                if(g.get_weight(e) < T(0) && wit.dist[e.s] != numeric_limits<T>::max()) { 
                     // negative edge & e.s is reached out
-                    if(dist[e.e] > dist[e.s] + g.get_weight(e)) {
+                    if(wit.dist[e.e] > wit.dist[e.s] + g.get_weight(e)) {
+                        wit.dist[e.e] = wit.dist[e.s] + g.get_weight(e);
+                        wit.parent_edge_idx[e.e] = edge_idx;
                         Q.emplace(
-                            dist[e.e] = dist[e.s] + g.get_weight(e),
+                            wit.dist[e.e],
                             e.e
                         );
                     }
                 }
+                ++edge_idx;
             }
         }
 
         if( validate ) {
-            assert( validate_shortest_path_tree(g, dist) );
+            assert( validate_shortest_path_tree(g, wit) );
         }
 
-        return dist;
+        return wit;
     }
 
     // lazy dijkstra with multiple sources. This is from BCF23.
     // Complexity: O(dijkstra * kappa)
     // kappa: guaranteed upper bound of loop iterations.
     template <typename T, typename PairT = pair<T, size_t>>
-    vector<T> multi_source(
+    ShortestPathTreeWitnessV2<T> multi_source(
         Graph<T> &g,
         vector<size_t> src,
         size_t kappa,
@@ -287,20 +303,21 @@ namespace lazy_dijkstra {
     ) {
         priority_queue<PairT, vector<PairT>, greater<PairT>> Q;
 
-        vector<T> dist = g.initial_dist();
+        ShortestPathTreeWitnessV2<T> wit(g.N());
+        wit.dist = g.initial_dist();
 
         for(auto s : src) {
-            dist[s] = T(0);
+            wit.dist[s] = T(0);
         }
 
-        return pre_dist(g, dist, kappa, validate, capper);
+        return predetermined_initial_wit(g, wit, kappa, validate, capper);
     }
 
     // lazy dijkstra with single source. This is from BCF23.
     // Complexity: O(dijkstra * kappa)
     // kappa: guaranteed upper bound of loop iterations.
     template <typename T, typename PairT = pair<T, size_t>>
-    vector<T> single_source(
+    ShortestPathTreeWitnessV2<T> single_source(
         Graph<T> &g,
         size_t src,
         size_t kappa,
@@ -314,7 +331,7 @@ namespace lazy_dijkstra {
     // Complexity: O(dijkstra * kappa)
     // kappa: guaranteed upper bound of loop iterations.
     template <typename T, typename PairT = pair<T, size_t>>
-    vector<T> all_source(
+    ShortestPathTreeWitnessV2<T> all_source(
         Graph<T> &g,
         size_t kappa,
         bool validate,
@@ -326,14 +343,15 @@ namespace lazy_dijkstra {
     }
 
     template <typename T>
-    vector<T> artificial_source(
+    ShortestPathTreeWitnessV2<T> artificial_source(
         Graph<T> &g,
         size_t kappa,
         bool validate,
         OperationCapper *capper = nullptr
     ) {
-        vector<T> initial_dist = g.phi;
-        for(auto &v : initial_dist) v = -v;
-        return pre_dist(g, initial_dist, kappa, validate, capper);
+        ShortestPathTreeWitnessV2<T> wit(g.N());
+        wit.dist = g.phi;
+        for(auto &v : wit.dist) v = -v;
+        return predetermined_initial_wit(g, wit, kappa, validate, capper);
     }
 } // lazy_dijkstra

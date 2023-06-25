@@ -32,9 +32,9 @@ vector<size_t> get_in_light_vertices(
         auto v = vertex_sampler(cfg.rng);
 
         if(!cfg.capper -> incr()) return vector<size_t>();
-        auto dist = naive_dijkstra::single_source(g, v, true);
+        auto wit = naive_dijkstra::single_source(g, v, true);
 
-        for(size_t j = 0; j < n; j++) ball_counter[j] += (dist[j] <= kappa / 4);
+        for(size_t j = 0; j < n; j++) ball_counter[j] += (wit.dist[j] <= kappa / 4);
     }
 
     vector<size_t> ret;
@@ -63,12 +63,13 @@ Witness<T> _solve_rsssp(
 
     // base case.
     if(g.N() <= 1 || kappa <= LOW_KAPPA_LIMIT) {
-        auto dist = lazy_dijkstra::all_source(g, kappa, false, cfg.capper);
+        auto wit = lazy_dijkstra::all_source(g, kappa, false, cfg.capper);
+        cerr << "small witness acquired\n";
         // capper failure
         if(cfg.capper ->fail()) return Witness<T>();
-        if( !validate_shortest_path_tree(g, dist) ) return Witness<T>();
+        if( !validate_shortest_path_tree(g, wit) ) return Witness<T>();
 
-        return make_witness_for_sptree(dist);
+        return make_witness_for_sptree(wit);
     }
 
     // recursion case.
@@ -169,7 +170,7 @@ Witness<T> _solve_rsssp(
             v_scc++
         ) {
             size_t v_g = S.vertex_up_map[scc_idx][v_scc];
-            g.phi[v_g] += wit.shortest_path_tree_witness[v_scc];
+            g.phi[v_g] += wit.shortest_path_tree_witness.dist[v_scc];
         }
     }
 

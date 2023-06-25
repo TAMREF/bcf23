@@ -1,16 +1,16 @@
-#include "sputils.hpp"
+#include "spresult.hpp"
 #include "spalgo.hpp"
 #include "graph.hpp"
 #include "catch2/catch_all.hpp"
 
-TEST_CASE("validate_shortest_path_tree", "[validate]") {
+TEST_CASE("validate_shortest_path_distance_map", "[validate]") {
     Graph<int> G(4);
 
     G.add_edge(Edge<int>({0, 1, 2}));
     G.add_edge(Edge<int>({1, 2, 1}));
     G.add_edge(Edge<int>({2, 3, -1}));
 
-    vector<int> v = lazy_dijkstra::single_source(G, 0, 2, false);
+    ShortestPathTreeWitnessV2<int> v = lazy_dijkstra::single_source(G, 0, 2, false);
 
     SECTION("dijkstra should succeed") {
         REQUIRE( validate_shortest_path_tree(G, v) );

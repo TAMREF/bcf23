@@ -27,6 +27,8 @@ struct Graph {
     unordered_set<size_t> delv, dele; // deleted vertices, edges;
     bool use_dels;
 
+    T potential_mult = 1;
+
     Graph(size_t n, bool is_scc = false) : phi(n), adj(n), radj(n), is_scc(is_scc), use_dels(false) {}
 
     void add_vertex(T phi_value=0) {
@@ -63,7 +65,7 @@ struct Graph {
     }
 
     T get_weight(const Edge<T> &e) {
-        return e.w + phi[e.s] - phi[e.e];
+        return e.w + potential_mult * (phi[e.s] - phi[e.e]);
     }
 
     T get_min_edge_weight() {
@@ -116,5 +118,13 @@ struct Graph {
     bool is_restricted() {
         // do not verify minimum cycle mean.
         return get_min_edge_weight() >= -1;
+    }
+
+    void ignore_potential() {
+        potential_mult = T(0);
+    }
+
+    void regard_potential() {
+        potential_mult = T(1);
     }
 };
