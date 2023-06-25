@@ -67,6 +67,7 @@ struct Graph {
     }
 
     T get_min_edge_weight() {
+        if(edges.empty()) return numeric_limits<T>::max();
         auto it = min_element(edges.begin(), edges.end(), [&](const Edge<T> &e, const Edge<T> &f) {
             return get_weight(e) < get_weight(f);
         });

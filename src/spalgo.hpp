@@ -229,13 +229,10 @@ namespace bellman_ford {
 } // bellman_ford
 
 namespace lazy_dijkstra {
-    // lazy dijkstra with multiple sources. This is from BCF23.
-    // Complexity: O(dijkstra * kappa)
-    // kappa: guaranteed upper bound of loop iterations.
     template <typename T, typename PairT = pair<T, size_t>>
-    vector<T> multi_source(
+    vector<T> pre_dist(
         Graph<T> &g,
-        vector<size_t> src,
+        vector<T> dist,
         size_t kappa,
         bool validate,
         OperationCapper *capper = nullptr
@@ -243,13 +240,10 @@ namespace lazy_dijkstra {
         if(capper == nullptr) {
             capper = new NoCapOperationCapper();
         }
-
         priority_queue<PairT, vector<PairT>, greater<PairT>> Q;
 
-        vector<T> dist = g.initial_dist();
-
-        for(auto s : src) {
-            Q.emplace(dist[s] = T(0), s);
+        for(size_t i = 0; i < g.N(); i++) {
+            Q.emplace(dist[i], i);
         }
 
         for(size_t counter = 0; counter < kappa && !Q.empty(); counter++) {
@@ -280,6 +274,28 @@ namespace lazy_dijkstra {
         return dist;
     }
 
+    // lazy dijkstra with multiple sources. This is from BCF23.
+    // Complexity: O(dijkstra * kappa)
+    // kappa: guaranteed upper bound of loop iterations.
+    template <typename T, typename PairT = pair<T, size_t>>
+    vector<T> multi_source(
+        Graph<T> &g,
+        vector<size_t> src,
+        size_t kappa,
+        bool validate,
+        OperationCapper *capper = nullptr
+    ) {
+        priority_queue<PairT, vector<PairT>, greater<PairT>> Q;
+
+        vector<T> dist = g.initial_dist();
+
+        for(auto s : src) {
+            dist[s] = T(0);
+        }
+
+        return pre_dist(g, dist, kappa, validate, capper);
+    }
+
     // lazy dijkstra with single source. This is from BCF23.
     // Complexity: O(dijkstra * kappa)
     // kappa: guaranteed upper bound of loop iterations.
@@ -307,5 +323,17 @@ namespace lazy_dijkstra {
         vector<size_t> src(g.N());
         iota(src.begin(), src.end(), 0);
         return multi_source(g, src, kappa, validate, capper);
+    }
+
+    template <typename T>
+    vector<T> artificial_source(
+        Graph<T> &g,
+        size_t kappa,
+        bool validate,
+        OperationCapper *capper = nullptr
+    ) {
+        vector<T> initial_dist = g.phi;
+        for(auto &v : initial_dist) v = -v;
+        return pre_dist(g, initial_dist, kappa, validate, capper);
     }
 } // lazy_dijkstra

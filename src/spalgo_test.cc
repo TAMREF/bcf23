@@ -27,3 +27,16 @@ TEST_CASE("compare bellman ford and lazy dijkstra", "[validate]") {
         REQUIRE(y != w);
     }
 }
+
+TEST_CASE("all source sssp", "[validate]") {
+    Graph<int> g(3);
+
+    g.add_edge({1, 2, 1});
+    g.add_edge({2, 0, -1});
+    g.add_edge({0, 1, 1});
+    g.phi = vector<int>({-2, -1, 0});
+
+    vector<int> y = lazy_dijkstra::artificial_source(g, 10, false);
+    
+    REQUIRE(y == vector<int>({1, 1, 0}));
+}

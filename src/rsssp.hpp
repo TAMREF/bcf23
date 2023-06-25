@@ -59,8 +59,6 @@ Witness<T> _solve_rsssp(
 
     assert(g.is_restricted());
 
-    cerr << "asdf\n";
-
     // capper on recursion depth.
     if(!cfg.capper -> incr()) return Witness<T>();
 
@@ -153,7 +151,7 @@ Witness<T> _solve_rsssp(
         else {
             cerr << "case 2: small kappa\n";
             Witness<T> witness = _solve_rsssp(scc, kappa / 2, cfg);
-            if( cfg.capper ->fail() || !witness.validate(scc) ) {
+            if( cfg.capper -> fail() || !witness.validate(scc) ) {
                 return Witness<T>();
             }
             witness_by_scc.emplace_back(witness);
@@ -189,9 +187,10 @@ Witness<T> _solve_rsssp(
     }
 
     cerr << "potential adjusted\n";
+    for(int i = 0; i < g.N(); i++) cerr << g.phi[i] << ' '; cerr << '\n';
 
     // lazy dijkstra with unlimited kappa. cap by capper
-    auto dist = lazy_dijkstra::all_source(
+    auto dist = lazy_dijkstra::artificial_source(
         g,
         size_t(-1),
         false,
@@ -202,7 +201,7 @@ Witness<T> _solve_rsssp(
 
     Witness<T> witness = make_witness_for_sptree(dist);
 
-    if(cfg.capper ->fail() || !witness.validate(g)) {
+    if(cfg.capper -> fail() || !witness.validate(g)) {
         return Witness<T>();
     }
 
@@ -210,7 +209,7 @@ Witness<T> _solve_rsssp(
 }
 
 template <typename T>
-Witness<T> solve_rsssp(Graph<T> g, SSSPConfig &cfg) {
+Witness<T> solve_rsssp(Graph<T> &g, SSSPConfig &cfg) {
     return _solve_rsssp(
         g,
         g.N(),

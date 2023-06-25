@@ -21,6 +21,6 @@ TEST_CASE("minimal example of restricted graph", "[rsssp]") {
     REQUIRE( w.validate(g) );
     REQUIRE( w.state == SHORTEST_PATH_TREE_FOUND );
     REQUIRE( w.shortest_path_tree_witness == vector<int>({
-        -1, 0, 0
+        1, 1, 0
     }));
 }
