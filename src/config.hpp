@@ -10,17 +10,10 @@ struct SSSPConfig {
     OperationCapper *capper;
     mt19937_64 rng;
 
-    SSSPConfig(OperationCapper *capper, mt19937_64 rng) : capper(capper), rng(rng) {}
+    explicit SSSPConfig(OperationCapper *capper, mt19937_64 rng) : capper(capper), rng(rng) {}
+
+    SSSPConfig(size_t budget, size_t seed = 0x5174) : rng(seed) {
+        if(budget == size_t(-1)) capper = new NoCapOperationCapper();
+        else capper = new NormalOperationCapper(budget);
+    }
 };
-
-SSSPConfig NewTrivialConfig(size_t seed = 0x5174) {
-    auto capper = new NoCapOperationCapper();
-    auto rng = mt19937_64(seed);
-    return SSSPConfig(capper, rng);
-}
-
-SSSPConfig NewCappedConfig(size_t budget, size_t seed = 0x5174) {
-    auto capper = new NormalOperationCapper(budget);
-    auto rng = mt19937_64(seed);
-    return SSSPConfig(capper, rng);
-}

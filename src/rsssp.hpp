@@ -31,7 +31,7 @@ vector<size_t> get_in_light_vertices(
     for(size_t i = 0; i < k; i++) {
         auto v = vertex_sampler(cfg.rng);
 
-        if(!cfg.capper ->incr()) return vector<size_t>();
+        if(!cfg.capper -> incr()) return vector<size_t>();
         auto dist = naive_dijkstra::single_source(g, v, true);
 
         for(size_t j = 0; j < n; j++) ball_counter[j] += (dist[j] <= kappa / 4);
@@ -54,9 +54,6 @@ Witness<T> _solve_rsssp(
     size_t kappa,
     SSSPConfig &cfg
 ) {
-    // fail if g is not an scc.
-    if(!g.is_scc) return Witness<T>();
-
     assert(g.is_restricted());
 
     // capper on recursion depth.
