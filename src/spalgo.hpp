@@ -224,7 +224,7 @@ namespace bellman_ford {
     // bellman-ford algorithm with a single source.
     template <typename T>
     ShortestPathTreeWitnessV2<T> single_source(
-        Graph<T> &g,
+        Graph<T> g,
         size_t src
     ) {
         return multi_source(g, vector<size_t>({src}));
@@ -234,7 +234,7 @@ namespace bellman_ford {
     // distance map will be non-positive in this case.
     template <typename T>
     ShortestPathTreeWitnessV2<T> all_source(
-        Graph<T> &g
+        Graph<T> g
     ) {
         vector<size_t> src(g.N());
         iota(src.begin(), src.end(), 0);

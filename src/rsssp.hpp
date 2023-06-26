@@ -68,7 +68,7 @@ Witness<T> _solve_rsssp(
         // capper failure
         if(cfg.capper ->fail()) return Witness<T>();
         if( !validate_shortest_path_tree(g, wit) ) return Witness<T>();
-
+        cerr << "witness validated\n";
         return make_witness_for_sptree(wit);
     }
 

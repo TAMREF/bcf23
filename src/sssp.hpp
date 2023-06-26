@@ -37,7 +37,7 @@ void one_step_scaling(
         e.w = __div_ceil(e.w, W) + 1;
     }
 
-    cerr << h.get_min_edge_weight() << endl;
+    cerr << "g: " << g.get_min_edge_weight() << ", h: " << h.get_min_edge_weight() << endl;
 
     Witness<T> wit = solve_rsssp(h, cfg);
 
@@ -55,7 +55,7 @@ void one_step_scaling(
 // sssp solves single source shortest path problem.
 template <typename T>
 Witness<T> sssp(
-    Graph<T> &g,
+    Graph<T> g,
     size_t src,
     SSSPConfig &cfg
 ) {
@@ -71,4 +71,27 @@ Witness<T> sssp(
         e.w *= weight_mult;
     }
     // scale before sssp
+    while(h.get_min_edge_weight() < T(-3)) {
+        one_step_scaling(h, cfg);
+        h.flush_potential();
+        if(cfg.capper -> fail()) return Witness<T>();
+    }
+
+    cerr << "one-step scaling done. " << h.get_min_edge_weight() << '\n';
+
+    Witness<T> wit;
+    wit.state = SHORTEST_PATH_TREE_FOUND;
+
+    ShortestPathTreeWitnessV2<T> swit = naive_dijkstra::single_source(
+        h,
+        src,
+        true,
+        cfg.capper
+    );
+
+    wit.shortest_path_tree_witness = swit;
+
+    if(!wit.validate(g)) return Witness<T>();
+
+    return wit;
 }

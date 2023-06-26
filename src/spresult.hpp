@@ -20,7 +20,7 @@ struct ShortestPathTreeWitnessV2 {
     // pure_dist : ignored potential
     vector<size_t> parent_edge_idx;
 
-    ShortestPathTreeWitnessV2(size_t n = 0) : dist(n), parent_edge_idx(n) {}
+    ShortestPathTreeWitnessV2(size_t n = 0) : dist(n), parent_edge_idx(n, size_t(-1)) {}
 };
 
 // negative cycle edge witness is edge idx.
@@ -87,6 +87,13 @@ bool validate_shortest_path_tree(
     vector<vector<size_t>> child_edges(n);
     vector<T> dist = g.initial_dist();
 
+    cerr << "parent edge indices:\n"; 
+    for(auto pe : wit.parent_edge_idx) {
+        if(pe == size_t(-1)) cerr << "-1\n";
+        else cerr << pe << ' ' << g.edges[pe].s << " -> " << g.edges[pe].e << "(" << g.edges[pe].w << ")\n";
+    }
+    cerr << '\n';
+
     for(size_t i = 0; i < n; i++) {
         if(
             size_t edge_idx = wit.parent_edge_idx[i];
@@ -108,6 +115,7 @@ bool validate_shortest_path_tree(
         q.emplace(s);
     }
 
+    cerr << "validating: initial bfs setup done\n";
     g.ignore_potential();
 
     while(!q.empty()) {
@@ -116,13 +124,16 @@ bool validate_shortest_path_tree(
         for(auto ch : child_edges[f]) {
             auto e = g.edges[ch];
             dist[e.e] = dist[e.s] + g.get_weight(e);
+            q.emplace(e.e);
         }
     }
+
     for(size_t i = 0; i < n; i++) {
         if(
             (wit.dist[i] == numeric_limits<T>::max())
             != (dist[i] == numeric_limits<T>::max()) // reachability does not agree
         ) {
+            cerr << i << " is reachable?: wit=" << wit.dist[i] << ", dist=" << dist[i] << "\n"; 
             return false;
         }
     }

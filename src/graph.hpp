@@ -127,4 +127,12 @@ struct Graph {
     void regard_potential() {
         potential_mult = T(1);
     }
+
+    void flush_potential() {
+        for(auto &e : edges) {
+            e.w = get_weight(e);
+        }
+        
+        for(auto &ph : phi) ph = T(0);
+    }
 };

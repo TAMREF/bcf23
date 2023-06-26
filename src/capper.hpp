@@ -33,6 +33,7 @@ struct NormalOperationCapper : OperationCapper {
     bool incr(size_t amount = 1) override {
         bool ret = counter <= budget; // last mercy
         counter += amount;
+        if(!ret) cerr << "!!!Capper failed!!!\n";
         return ret;
     }
 };
